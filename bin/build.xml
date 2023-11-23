@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+
+<project name="PetStore" default="core" basedir=".">
+
+    <!-- path to root -->
+    <property name="home.dir" value="..\"/>
+    <property name="config.dir" value="${home.dir}/config"/>
+    <property name="lib.dir" value="${home.dir}/lib"/>
+    <property name="build.dir" value="${home.dir}/build"/>
+
+    <property name="classes.dir" value="${home.dir}/classes"/>
+    <property name="src.dir" value="${home.dir}/src"/>
+
+    <property name="test.dir" value="${home.dir}/test"/>
+    <property name="test.classes.dir" value="${test.dir}/classes"/>
+    <property name="test.src.dir" value="${test.dir}/src"/>
+
+    <!-- Files -->
+    <property name="client.catalog.jar" value="${build.dir}/clientCatalog.jar"/>
+    <property name="client.customer.jar" value="${build.dir}/clientCustomer.jar"/>
+
+    <!-- Classes and Jars used to compile and test the application -->
+    <path id="classpath">
+        <pathelement location="${classes.dir}"/>
+        <pathelement location="${test.classes.dir}"/>
+        <pathelement location="${lib.dir}\junit.jar"/>
+        <pathelement location="${lib.dir}\mysql-connector.jar"/>
+    </path>
+
+    <!-- Removes the build directories -->
+    <target name="clean">
+        <echo message="Cleans the environment"/>
+        <delete dir="${classes.dir}"/>
+        <delete dir="${test.classes.dir}"/>
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <!-- Creates or updates the Petstore database structure -->
+    <target name="databaseStructure">
+        <sql src="${config.dir}/structure.sql"
+            driver="com.mysql.jdbc.Driver"
+            url="jdbc:mysql://localhost:3306/petstore"
+            userid="root"
+            password="">
+            <classpath refid="classpath"/>
+        </sql>
+    </target>
+
+    <!-- Inserts data to the Petstore database -->
+    <target name="databaseData">
+        <sql src="${config.dir}/data.sql"
+            driver="com.mysql.jdbc.Driver"
+            url="jdbc:mysql://localhost:3306/petstore"
+            userid="root"
+            password="">
+            <classpath refid="classpath"/>
+        </sql>
+    </target>
+
+    <!-- Compiles source code -->
+    <target name="compile">
+        <echo message="Compile the classes"/>
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}"
+            destdir="${classes.dir}">
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <!-- Creates the client jar files -->
+    <target name="jar" depends="compile">
+        <mkdir dir="${build.dir}"/>
+        <echo message="Creates the PetStore Customer jar"/>
+        <jar jarfile="${client.customer.jar}">
+            <fileset dir="${classes.dir}">
+                <include name="com/yaps/petstore/domain/*.class"/>
+                <include name="com/yaps/petstore/domain/customer/*.class"/>
+                <include name="com/yaps/petstore/exception/*.class"/>
+                <include name="com/yaps/petstore/logging/*.class"/>
+                <include name="com/yaps/petstore/persistence/*.class"/>
+                <include name="com/yaps/petstore/ui/MenuCustomer.class"/>
+            </fileset>
+        </jar>
+        <echo message="Creates the PetStore Catalog jar"/>
+        <jar jarfile="${client.catalog.jar}">
+            <fileset dir="${classes.dir}">
+                <include name="com/yaps/petstore/domain/**/*.class"/>
+                <exclude name="com/yaps/petstore/domain/customer/*.class"/>
+                <include name="com/yaps/petstore/exception/*.class"/>
+                <include name="com/yaps/petstore/logging/*.class"/>
+                <include name="com/yaps/petstore/persistence/*.class"/>
+                <include name="com/yaps/petstore/ui/MenuCatalog.class"/>
+            </fileset>
+        </jar>
+    </target>
+
+    <!-- Test -->
+    <target name="test" depends="compile">
+        <echo message="Compile the test classes"/>
+        <mkdir dir="${test.classes.dir}"/>
+        <javac srcdir="${test.src.dir}"
+            destdir="${classes.dir}">
+            <classpath refid="classpath"/>
+        </javac>
+        <echo message="Test the application"/>
+        <junit printsummary="on">
+            <formatter type="plain" usefile="false"/>
+            <test name="AllTests"/>
+            <classpath refid="classpath"/>
+        </junit>
+    </target>
+
+    <!-- Main targets -->
+    <target name="core" depends="clean,compile,jar"/>
+
+</project>
